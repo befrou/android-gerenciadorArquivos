@@ -22,7 +22,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
+import Adapter.CustomAdapter;
 import dialog.NovaPastaDialog;
 import utils.RunTimePermission;
 
@@ -49,16 +51,17 @@ public class MainActivity extends AppCompatActivity implements  NovaPastaDialog.
 
                 if(!item.equals("..")) {
                     File file = new File(Environment.getExternalStorageDirectory().getPath() + path + "/" + item);
+
                     if(file.isDirectory()) {
                         txtPath.setText(path.endsWith("/") ? path + item : path + "/" + item);
-
+                        atualizarArvore();
                     } else if(file.getName().endsWith(".txt")) {
                         Intent intent = new Intent(MainActivity.this, FormActivity.class);
                         intent.putExtra("path", file.getAbsolutePath());
                         intent.putExtra("edit", true);
                         startActivity(intent);
                     } else {
-                        Toast.makeText(view.getContext(), "Arquivo não suportado!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(view.getContext(), "Arquivo não suportado", Toast.LENGTH_LONG).show();
                     }
                 } else {
                     if(!path.equals("/")) {
@@ -69,10 +72,10 @@ public class MainActivity extends AppCompatActivity implements  NovaPastaDialog.
                         }
 
                         txtPath.setText(abovePath);
+                        atualizarArvore();
                     }
                 }
                 registerForContextMenu(lstArvore);
-                atualizarArvore();
             }
         });
         atualizarArvore();
@@ -191,7 +194,34 @@ public class MainActivity extends AppCompatActivity implements  NovaPastaDialog.
             if(!path.equals("/")) {
                 arr.add(0, "..");
             }
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, arr);
+
+            int[] drawableIds = new int[arr.size()];
+            String[] titlesArr = new String[arr.size()];
+            int index = 0;
+
+            for(String str : arr) {
+                String fPath = raiz + path + "/" + str;
+                File currFile = new File(fPath);
+
+                titlesArr[index] = str;
+                if(str.equals("..")) {
+                    drawableIds[index] = 0;
+                    ++index;
+                    continue;
+                }
+                if(currFile.getName().endsWith(".txt")) {
+                    drawableIds[index] = R.drawable.ic_edit_file;
+                } else if(currFile.isDirectory()) {
+                    drawableIds[index] = R.drawable.ic_folder;
+                } else {
+                    drawableIds[index] = R.drawable.ic_android_black_24dp;
+                }
+
+                ++index;
+            }
+//            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, arr);
+
+            CustomAdapter adapter = new CustomAdapter(this,  titlesArr, drawableIds);
             adapter.notifyDataSetChanged();
             lstArvore.setAdapter(adapter);
         }
